@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<div class="page-head">
+
+    <div>
+
+        <h1>
+            Usuarios
+        </h1>
+
+        <p class="muted">
+            Administración de usuarios y permisos.
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- CREAR NUEVO USUARIO -->
+<!-- ===================================================== -->
+
+<div class="card">
+
+    <h2>
+        Crear nuevo usuario
+    </h2>
+
+
+    <form
+        method="post"
+        action="{{ url_for('user_save') }}"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}"
+        >
+
+
+        <label>
+            Nombre de usuario
+        </label>
+
+        <input
+            name="username"
+            placeholder="Ej. vendedor01"
+            required
+        >
+
+
+        <label>
+            Contraseña
+        </label>
+
+        <input
+            name="password"
+            type="password"
+            minlength="8"
+            required
+        >
+
+
+        <label>
+
+            <input
+                type="checkbox"
+                name="is_admin"
+                style="width:auto;"
+            >
+
+            Administrador
+
+        </label>
+
+
+        <label>
+
+            <input
+                type="checkbox"
+                name="active"
+                checked
+                style="width:auto;"
+            >
+
+            Usuario activo
+
+        </label>
+
+
+        <br>
+
+
+        <button class="primary">
+            Crear usuario
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- USUARIOS EXISTENTES -->
+<!-- ===================================================== -->
+
+<div class="card">
+
+    <h2>
+        Usuarios existentes
+    </h2>
+
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Usuario
+                </th>
+
+                <th>
+                    Tipo
+                </th>
+
+                <th>
+                    Estado
+                </th>
+
+                <th>
+                    Acción
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+        {% for user in users %}
+
+            <tr>
+
+                <td>
+
+                    <strong>
+                        {{ user.username }}
+                    </strong>
+
+                </td>
+
+
+                <td>
+
+                    {% if user.is_admin %}
+
+                        Administrador
+
+                    {% else %}
+
+                        Usuario
+
+                    {% endif %}
+
+                </td>
+
+
+                <td>
+
+                    {% if user.active %}
+
+                        Activo
+
+                    {% else %}
+
+                        Inactivo
+
+                    {% endif %}
+
+                </td>
+
+
+                <td>
+
+                    <details>
+
+                        <summary
+                            style="cursor:pointer;"
+                        >
+                            Editar
+                        </summary>
+
+
+                        <div
+                            style="
+                                margin-top:15px;
+                                min-width:280px;
+                            "
+                        >
+
+                            <form
+                                method="post"
+                                action="{{ url_for('user_save') }}"
+                            >
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+
+                                <input
+                                    type="hidden"
+                                    name="id"
+                                    value="{{ user.id }}"
+                                >
+
+
+                                <label>
+                                    Usuario
+                                </label>
+
+
+                                {% if user.username == "VELH" %}
+
+                                    <input
+                                        name="username"
+                                        value="VELH"
+                                        readonly
+                                    >
+
+                                {% else %}
+
+                                    <input
+                                        name="username"
+                                        value="{{ user.username }}"
+                                        required
+                                    >
+
+                                {% endif %}
+
+
+                                <label>
+                                    Nueva contraseña
+                                </label>
+
+                                <input
+                                    name="password"
+                                    type="password"
+                                    minlength="8"
+                                    placeholder="Dejar vacío para no cambiar"
+                                >
+
+
+                                {% if user.username == "VELH" %}
+
+                                    <label>
+
+                                        <input
+                                            type="checkbox"
+                                            checked
+                                            disabled
+                                            style="width:auto;"
+                                        >
+
+                                        Administrador
+
+                                    </label>
+
+
+                                    <input
+                                        type="hidden"
+                                        name="is_admin"
+                                        value="on"
+                                    >
+
+
+                                    <label>
+
+                                        <input
+                                            type="checkbox"
+                                            checked
+                                            disabled
+                                            style="width:auto;"
+                                        >
+
+                                        Activo
+
+                                    </label>
+
+
+                                    <input
+                                        type="hidden"
+                                        name="active"
+                                        value="on"
+                                    >
+
+
+                                    <p class="muted">
+
+                                        VELH es el administrador principal
+                                        y no puede ser desactivado ni perder
+                                        privilegios administrativos.
+
+                                    </p>
+
+                                {% else %}
+
+                                    <label>
+
+                                        <input
+                                            type="checkbox"
+                                            name="is_admin"
+
+                                            {% if user.is_admin %}
+                                                checked
+                                            {% endif %}
+
+                                            style="width:auto;"
+                                        >
+
+                                        Administrador
+
+                                    </label>
+
+
+                                    <label>
+
+                                        <input
+                                            type="checkbox"
+                                            name="active"
+
+                                            {% if user.active %}
+                                                checked
+                                            {% endif %}
+
+                                            style="width:auto;"
+                                        >
+
+                                        Usuario activo
+
+                                    </label>
+
+                                {% endif %}
+
+
+                                <br>
+
+
+                                <button class="primary">
+
+                                    Guardar cambios
+
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </details>
+
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

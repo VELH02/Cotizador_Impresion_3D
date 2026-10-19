@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="page-head">
+
+    <div>
+
+        <h1>
+            Panel
+        </h1>
+
+        <p class="muted">
+            Resumen del sistema de cotizaciones
+        </p>
+
+    </div>
+
+
+    <a
+        class="button primary"
+        href="{{ url_for('quote_new') }}"
+    >
+        + Nueva cotización
+    </a>
+
+</div>
+
+
+<div class="stats">
+
+
+    <div class="stat">
+
+        <span>
+            Cotizaciones
+        </span>
+
+        <strong>
+            {{ stats.quotes }}
+        </strong>
+
+    </div>
+
+
+    <div class="stat">
+
+        <span>
+            Filamentos
+        </span>
+
+        <strong>
+            {{ stats.filaments }}
+        </strong>
+
+    </div>
+
+
+    <div class="stat">
+
+        <span>
+            Presets
+        </span>
+
+        <strong>
+            {{ stats.presets }}
+        </strong>
+
+    </div>
+
+
+    <div class="stat">
+
+        <span>
+            Valor cotizado
+        </span>
+
+        <strong>
+            {{ currency }}{{ stats.total|money }}
+        </strong>
+
+    </div>
+
+
+</div>
+
+
+<div class="card">
+
+
+    <div class="card-header">
+
+        <h2>
+            Cotizaciones recientes
+        </h2>
+
+        <a href="{{ url_for('quotes') }}">
+            Ver todas
+        </a>
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Número
+                    </th>
+
+                    <th>
+                        Fecha
+                    </th>
+
+                    <th>
+                        Cliente
+                    </th>
+
+                    <th>
+                        Vendedor
+                    </th>
+
+                    <th>
+                        Total
+                    </th>
+
+                    <th></th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+
+            {% for q in recent %}
+
+                <tr>
+
+                    <td>
+                        {{ q.quote_number }}
+                    </td>
+
+                    <td>
+                        {{ q.created_at|localdatetime }}
+                    </td>
+
+                    <td>
+                        {{ q.customer_name or "—" }}
+                    </td>
+
+                    <td>
+
+                        {% if q.created_by %}
+
+                            {{ q.created_by.username }}
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        {{ currency }}{{ q.total|money }}
+                    </td>
+
+                    <td>
+
+                        <a
+                            href="{{ url_for(
+                                'quote_view',
+                                quote_id=q.id
+                            ) }}"
+                        >
+                            Abrir
+                        </a>
+
+                    </td>
+
+                </tr>
+
+
+            {% else %}
+
+
+                <tr>
+
+                    <td
+                        colspan="6"
+                        class="muted"
+                    >
+
+                        Todavía no hay cotizaciones.
+
+                    </td>
+
+                </tr>
+
+
+            {% endfor %}
+
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+{% endblock %}

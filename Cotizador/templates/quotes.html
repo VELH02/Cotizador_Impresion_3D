@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="page-head">
+
+    <div>
+
+        <h1>
+            Cotizaciones
+        </h1>
+
+        <p class="muted">
+            Historial de cotizaciones realizadas
+        </p>
+
+    </div>
+
+
+    <a
+        class="button primary"
+        href="{{ url_for('quote_new') }}"
+    >
+        + Nueva cotización
+    </a>
+
+</div>
+
+
+<form class="search-bar">
+
+    <input
+        name="q"
+        value="{{ term }}"
+        placeholder="Buscar cliente o número"
+    >
+
+    <button>
+        Buscar
+    </button>
+
+</form>
+
+
+<div class="card">
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Número
+                    </th>
+
+                    <th>
+                        Fecha
+                    </th>
+
+                    <th>
+                        Cliente
+                    </th>
+
+                    <th>
+                        Vendedor
+                    </th>
+
+                    <th>
+                        Preset
+                    </th>
+
+                    <th>
+                        Total
+                    </th>
+
+                    <th></th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+
+            {% for quote in quotes %}
+
+                <tr>
+
+                    <td>
+
+                        <strong>
+                            {{ quote.quote_number }}
+                        </strong>
+
+                    </td>
+
+                    <td>
+                        {{ quote.created_at|localdatetime }}
+                    </td>
+
+                    <td>
+                        {{ quote.customer_name or "—" }}
+                    </td>
+
+                    <td>
+
+                        {% if quote.created_by %}
+
+                            {{ quote.created_by.username }}
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        {{ quote.preset_name }}
+                    </td>
+
+                    <td>
+                        {{ currency }}{{ quote.total|money }}
+                    </td>
+
+                    <td>
+
+                        <a
+                            href="{{ url_for(
+                                'quote_view',
+                                quote_id=quote.id
+                            ) }}"
+                        >
+                            Abrir
+                        </a>
+
+                    </td>
+
+                </tr>
+
+
+            {% else %}
+
+
+                <tr>
+
+                    <td
+                        colspan="7"
+                        class="muted"
+                    >
+
+                        No se encontraron cotizaciones.
+
+                    </td>
+
+                </tr>
+
+
+            {% endfor %}
+
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+{% endblock %}

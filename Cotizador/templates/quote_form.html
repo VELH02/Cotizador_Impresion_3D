@@ -1,0 +1,938 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="page-head">
+
+    <div>
+
+        <h1>
+            {{ title }}
+        </h1>
+
+        <p class="muted">
+            Los tiempos y gramajes se ingresan por cada unidad.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="card quote-info-bar">
+
+    <div>
+
+        <span class="info-label">
+            Vendedor
+        </span>
+
+        <strong>
+            {{ current_user.username }}
+        </strong>
+
+    </div>
+
+
+    <div>
+
+        <span class="info-label">
+            Fecha
+        </span>
+
+        <strong>
+            Se registra automáticamente al guardar
+        </strong>
+
+    </div>
+
+</div>
+
+
+<form
+    method="post"
+    id="quoteForm"
+>
+
+
+<input
+    type="hidden"
+    name="csrf_token"
+    value="{{ csrf_token() }}"
+>
+
+
+<input
+    type="hidden"
+    name="quote_payload"
+    id="quotePayload"
+>
+
+
+<div class="card">
+
+
+    <label>
+        Cliente
+    </label>
+
+    <input
+        id="customerName"
+        value="{{ initial.customer_name }}"
+        placeholder="Nombre del cliente"
+    >
+
+
+    <label>
+        Preset de precio
+    </label>
+
+
+    <select
+        id="presetId"
+        required
+    >
+
+
+    {% for preset in presets %}
+
+
+        <option
+
+            value="{{ preset.id }}"
+
+            {% if
+                initial.preset_id
+                == preset.id
+            %}
+                selected
+            {% endif %}
+
+        >
+
+            {{ preset.name }}
+
+        </option>
+
+
+    {% endfor %}
+
+
+    </select>
+
+
+</div>
+
+
+<div id="lines"></div>
+
+
+<button
+    type="button"
+    id="addLine"
+>
+    + Agregar artículo
+</button>
+
+
+<div class="card">
+
+
+    <h2>
+        Extras
+    </h2>
+
+
+    <p class="muted">
+        Anillos, imanes, tornillos, cajas, empaques, etc.
+    </p>
+
+
+    <div id="extras"></div>
+
+
+    <button
+        type="button"
+        id="addExtra"
+    >
+        + Agregar extra
+    </button>
+
+
+</div>
+
+
+<div class="card">
+
+
+    <label>
+        Notas
+    </label>
+
+
+    <textarea
+        id="notes"
+        rows="5"
+        placeholder="Condiciones, acabado, fecha estimada, etc."
+    >{{ initial.notes }}</textarea>
+
+
+</div>
+
+
+<button class="primary big-button">
+    Guardar cotización
+</button>
+
+
+</form>
+
+
+<script>
+
+
+const FILAMENTS =
+    {{ filaments_json | tojson }};
+
+
+const INITIAL =
+    {{ initial | tojson }};
+
+
+const linesContainer =
+    document.getElementById(
+        "lines"
+    );
+
+
+const extrasContainer =
+    document.getElementById(
+        "extras"
+    );
+
+
+function escapeHtml(value) {
+
+    return String(
+        value ?? ""
+    ).replace(
+        /[&<>"']/g,
+        function(character) {
+
+            const characters = {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            };
+
+            return characters[
+                character
+            ];
+
+        }
+    );
+
+}
+
+
+function filamentOptions(
+    selected
+) {
+
+    let html =
+        '<option value="">Seleccionar</option>';
+
+
+    FILAMENTS.forEach(
+        filament => {
+
+            const isSelected =
+                String(selected)
+                ===
+                String(filament.id);
+
+
+            html += `
+
+                <option
+
+                    value="${filament.id}"
+
+                    ${isSelected
+                        ? "selected"
+                        : ""
+                    }
+
+                >
+
+                    ${escapeHtml(
+                        filament.label
+                    )}
+
+                </option>
+
+            `;
+
+        }
+    );
+
+
+    return html;
+}
+
+
+function createFilamentRow(
+    data = {}
+) {
+
+    const row =
+        document.createElement(
+            "div"
+        );
+
+
+    row.className =
+        "filament-row";
+
+
+    row.innerHTML = `
+
+        <select class="filament-id">
+
+            ${filamentOptions(
+                data.filament_id
+            )}
+
+        </select>
+
+
+        <input
+
+            class="filament-grams"
+
+            type="number"
+
+            step="0.01"
+
+            min="0"
+
+            placeholder="gramos por pieza"
+
+            value="${
+                data.grams_each ?? ""
+            }"
+
+        >
+
+
+        <button
+            type="button"
+            class="danger"
+        >
+            X
+        </button>
+
+    `;
+
+
+    row.querySelector(
+        "button"
+    ).onclick = () => {
+
+        row.remove();
+
+    };
+
+
+    return row;
+}
+
+
+function addLine(
+    data = {}
+) {
+
+
+    const card =
+        document.createElement(
+            "div"
+        );
+
+
+    card.className =
+        "card quote-line";
+
+
+    card.innerHTML = `
+
+
+        <div class="line-header">
+
+
+            <h2>
+                Artículo
+            </h2>
+
+
+            <button
+
+                type="button"
+
+                class="
+                    remove-line
+                    danger
+                "
+
+            >
+                Eliminar
+            </button>
+
+
+        </div>
+
+
+        <label>
+            Nombre del artículo
+        </label>
+
+
+        <input
+
+            class="article-name"
+
+            value="${
+                escapeHtml(
+                    data.article_name
+                    ?? ""
+                )
+            }"
+
+            required
+
+        >
+
+
+        <label>
+            Cantidad
+        </label>
+
+
+        <input
+
+            class="quantity"
+
+            type="number"
+
+            min="1"
+
+            step="1"
+
+            value="${
+                data.quantity ?? 1
+            }"
+
+            required
+
+        >
+
+
+        <label>
+            Horas de impresión por pieza
+        </label>
+
+
+        <input
+
+            class="print-hours"
+
+            type="number"
+
+            step="0.01"
+
+            min="0"
+
+            value="${
+                data.print_hours_each
+                ?? 0
+            }"
+
+            required
+
+        >
+
+
+        <label>
+            Horas de postprocesado por pieza
+        </label>
+
+
+        <input
+
+            class="post-hours"
+
+            type="number"
+
+            step="0.01"
+
+            min="0"
+
+            value="${
+                data.post_hours_each
+                ?? 0
+            }"
+
+            required
+
+        >
+
+
+        <h3>
+            Filamentos
+        </h3>
+
+
+        <div class="filaments"></div>
+
+
+        <button
+            type="button"
+            class="add-filament"
+        >
+            + Agregar filamento
+        </button>
+
+    `;
+
+
+    const filamentArea =
+        card.querySelector(
+            ".filaments"
+        );
+
+
+    card.querySelector(
+        ".add-filament"
+    ).onclick = () => {
+
+        filamentArea.appendChild(
+            createFilamentRow()
+        );
+
+    };
+
+
+    card.querySelector(
+        ".remove-line"
+    ).onclick = () => {
+
+
+        if (
+
+            document.querySelectorAll(
+                ".quote-line"
+            ).length > 1
+
+        ) {
+
+            card.remove();
+
+        }
+
+    };
+
+
+    if (
+
+        data.filaments
+        &&
+        data.filaments.length
+
+    ) {
+
+
+        data.filaments.forEach(
+            filament => {
+
+                filamentArea.appendChild(
+
+                    createFilamentRow(
+                        filament
+                    )
+
+                );
+
+            }
+        );
+
+
+    } else {
+
+
+        filamentArea.appendChild(
+            createFilamentRow()
+        );
+
+    }
+
+
+    linesContainer.appendChild(
+        card
+    );
+
+}
+
+
+function addExtra(
+    data = {}
+) {
+
+
+    const row =
+        document.createElement(
+            "div"
+        );
+
+
+    row.className =
+        "extra-row";
+
+
+    row.innerHTML = `
+
+
+        <input
+
+            class="extra-description"
+
+            placeholder="Descripción"
+
+            value="${
+                escapeHtml(
+                    data.description
+                    ?? ""
+                )
+            }"
+
+        >
+
+
+        <input
+
+            class="extra-quantity"
+
+            type="number"
+
+            min="1"
+
+            step="1"
+
+            value="${
+                data.quantity ?? 1
+            }"
+
+            placeholder="Cantidad"
+
+        >
+
+
+        <input
+
+            class="extra-cost"
+
+            type="number"
+
+            min="0"
+
+            step="0.01"
+
+            value="${
+                data.unit_cost ?? ""
+            }"
+
+            placeholder="Costo unitario"
+
+        >
+
+
+        <button
+            type="button"
+            class="danger"
+        >
+            X
+        </button>
+
+
+    `;
+
+
+    row.querySelector(
+        "button"
+    ).onclick = () => {
+
+        row.remove();
+
+    };
+
+
+    extrasContainer.appendChild(
+        row
+    );
+
+}
+
+
+(INITIAL.lines || []).forEach(
+    line => addLine(
+        line
+    )
+);
+
+
+(INITIAL.extras || []).forEach(
+    extra => addExtra(
+        extra
+    )
+);
+
+
+if (
+    !document.querySelector(
+        ".quote-line"
+    )
+) {
+
+    addLine();
+
+}
+
+
+document.getElementById(
+    "addLine"
+).onclick = () => {
+
+    addLine();
+
+};
+
+
+document.getElementById(
+    "addExtra"
+).onclick = () => {
+
+    addExtra();
+
+};
+
+
+document.getElementById(
+    "quoteForm"
+).addEventListener(
+
+    "submit",
+
+    function() {
+
+
+        const payload = {
+
+
+            customer_name:
+                document.getElementById(
+                    "customerName"
+                ).value,
+
+
+            preset_id:
+                document.getElementById(
+                    "presetId"
+                ).value,
+
+
+            notes:
+                document.getElementById(
+                    "notes"
+                ).value,
+
+
+            lines: [],
+
+
+            extras: []
+
+        };
+
+
+        document
+        .querySelectorAll(
+            ".quote-line"
+        )
+        .forEach(
+            card => {
+
+
+                const line = {
+
+
+                    article_name:
+                        card.querySelector(
+                            ".article-name"
+                        ).value,
+
+
+                    quantity:
+                        Number(
+                            card.querySelector(
+                                ".quantity"
+                            ).value
+                        ),
+
+
+                    print_hours_each:
+                        Number(
+                            card.querySelector(
+                                ".print-hours"
+                            ).value
+                        ),
+
+
+                    post_hours_each:
+                        Number(
+                            card.querySelector(
+                                ".post-hours"
+                            ).value
+                        ),
+
+
+                    filaments: []
+
+                };
+
+
+                card
+                .querySelectorAll(
+                    ".filament-row"
+                )
+                .forEach(
+                    row => {
+
+
+                        const filamentId =
+                            Number(
+
+                                row.querySelector(
+                                    ".filament-id"
+                                ).value
+
+                            );
+
+
+                        const grams =
+                            Number(
+
+                                row.querySelector(
+                                    ".filament-grams"
+                                ).value
+
+                            );
+
+
+                        if (
+                            filamentId
+                            &&
+                            grams > 0
+                        ) {
+
+
+                            line.filaments.push(
+                                {
+
+                                    filament_id:
+                                        filamentId,
+
+                                    grams_each:
+                                        grams
+
+                                }
+                            );
+
+                        }
+
+                    }
+                );
+
+
+                payload.lines.push(
+                    line
+                );
+
+            }
+        );
+
+
+        document
+        .querySelectorAll(
+            ".extra-row"
+        )
+        .forEach(
+            row => {
+
+
+                const description =
+                    row.querySelector(
+                        ".extra-description"
+                    ).value;
+
+
+                if (
+                    description.trim()
+                ) {
+
+
+                    payload.extras.push(
+                        {
+
+                            description:
+                                description,
+
+                            quantity:
+                                Number(
+                                    row.querySelector(
+                                        ".extra-quantity"
+                                    ).value
+                                ),
+
+                            unit_cost:
+                                Number(
+                                    row.querySelector(
+                                        ".extra-cost"
+                                    ).value
+                                )
+
+                        }
+                    );
+
+                }
+
+            }
+        );
+
+
+        document.getElementById(
+            "quotePayload"
+        ).value =
+            JSON.stringify(
+                payload
+            );
+
+    }
+);
+
+
+</script>
+
+
+{% endblock %}

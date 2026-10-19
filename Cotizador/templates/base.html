@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        {% block title %}
+        {{ company_name }}
+        {% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='app.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+{% if current_user.is_authenticated %}
+
+<header class="topbar">
+
+
+    <a
+        class="brand"
+        href="{{ url_for('dashboard') }}"
+    >
+
+        <img
+            class="brand-logo"
+            src="{{ url_for('static', filename='logo.png') }}"
+            alt="{{ company_name }}"
+            onerror="
+                this.style.display='none';
+                this.nextElementSibling.style.display='inline';
+            "
+        >
+
+
+        <span
+            class="brand-fallback"
+            style="display:none;"
+        >
+
+            {{ company_name }}
+
+        </span>
+
+    </a>
+
+
+    <nav>
+
+        <a href="{{ url_for('quotes') }}">
+            Cotizaciones
+        </a>
+
+        <a href="{{ url_for('filaments') }}">
+            Filamentos
+        </a>
+
+        <a href="{{ url_for('margins') }}">
+            Márgenes
+        </a>
+
+
+        {% if current_user.is_admin %}
+
+        <a href="{{ url_for('users') }}">
+            Usuarios
+        </a>
+
+        <a href="{{ url_for('audit_log') }}">
+            Auditoría
+        </a>
+
+        <a href="{{ url_for('system_page') }}">
+            Sistema
+        </a>
+
+        {% endif %}
+
+    </nav>
+
+
+    <div class="user-box">
+
+        <span>
+
+            {{ current_user.username }}
+
+            {% if current_user.is_admin %}
+                · Admin
+            {% endif %}
+
+        </span>
+
+
+        <form
+            action="{{ url_for('logout') }}"
+            method="post"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+            <button class="logout-button">
+                Salir
+            </button>
+
+        </form>
+
+    </div>
+
+</header>
+
+{% endif %}
+
+
+<main class="container">
+
+
+{% with messages =
+    get_flashed_messages(
+        with_categories=true
+    )
+%}
+
+
+    {% for category, message in messages %}
+
+        <div class="flash {{ category }}">
+
+            {{ message }}
+
+        </div>
+
+    {% endfor %}
+
+
+{% endwith %}
+
+
+{% block content %}
+{% endblock %}
+
+
+</main>
+
+
+</body>
+
+</html>

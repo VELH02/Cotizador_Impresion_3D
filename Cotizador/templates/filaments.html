@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<div class="page-head">
+
+    <div>
+
+        <h1>
+            Filamentos
+        </h1>
+
+        <p class="muted">
+
+            El precio por gramo se calcula automáticamente
+            usando el precio y peso del rollo.
+
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- AGREGAR FILAMENTO -->
+<!-- ===================================================== -->
+
+{% if current_user.is_admin %}
+
+<div class="card">
+
+    <h2>
+        Agregar filamento
+    </h2>
+
+
+    <form
+        method="post"
+        action="{{ url_for('filament_save') }}"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}"
+        >
+
+
+        <label>
+            Nombre
+        </label>
+
+        <input
+            name="name"
+            placeholder="Ej. Bambu PLA Basic Rojo"
+            required
+        >
+
+
+        <label>
+            Material
+        </label>
+
+        <input
+            name="material"
+            placeholder="PLA"
+            required
+        >
+
+
+        <label>
+            Color
+        </label>
+
+        <input
+            name="color"
+            placeholder="Rojo"
+            required
+        >
+
+
+        <label>
+            Precio del rollo
+        </label>
+
+        <input
+            name="spool_price"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="25.00"
+            required
+        >
+
+
+        <label>
+            Peso del rollo en gramos
+        </label>
+
+        <input
+            name="spool_weight_g"
+            type="number"
+            min="1"
+            step="0.01"
+            value="1000"
+            required
+        >
+
+
+        <label>
+
+            <input
+                type="checkbox"
+                name="active"
+                checked
+                style="width:auto;"
+            >
+
+            Activo
+
+        </label>
+
+
+        <br>
+
+
+        <button class="primary">
+            Guardar filamento
+        </button>
+
+    </form>
+
+</div>
+
+{% endif %}
+
+
+<!-- ===================================================== -->
+<!-- LISTADO -->
+<!-- ===================================================== -->
+
+<div class="card">
+
+    <h2>
+        Filamentos registrados
+    </h2>
+
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Nombre
+                </th>
+
+                <th>
+                    Material
+                </th>
+
+                <th>
+                    Color
+                </th>
+
+                <th>
+                    Rollo
+                </th>
+
+                <th>
+                    Precio/g
+                </th>
+
+                <th>
+                    Estado
+                </th>
+
+                {% if current_user.is_admin %}
+
+                    <th>
+                        Acción
+                    </th>
+
+                {% endif %}
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+        {% for filament in filaments %}
+
+            <tr>
+
+                <td>
+
+                    <strong>
+                        {{ filament.name }}
+                    </strong>
+
+                </td>
+
+
+                <td>
+                    {{ filament.material }}
+                </td>
+
+
+                <td>
+                    {{ filament.color }}
+                </td>
+
+
+                <td>
+
+                    {{ currency }}{{ filament.spool_price|money }}
+
+                    /
+
+                    {{ filament.spool_weight_g }} g
+
+                </td>
+
+
+                <td>
+
+                    {{ currency }}{{ "%.4f"|format(filament.price_per_g) }}
+
+                </td>
+
+
+                <td>
+
+                    {% if filament.active %}
+
+                        Activo
+
+                    {% else %}
+
+                        Inactivo
+
+                    {% endif %}
+
+                </td>
+
+
+                {% if current_user.is_admin %}
+
+                <td>
+
+                    <details>
+
+                        <summary
+                            style="cursor:pointer;"
+                        >
+                            Editar
+                        </summary>
+
+
+                        <div
+                            style="
+                                margin-top:15px;
+                                min-width:280px;
+                            "
+                        >
+
+                            <form
+                                method="post"
+                                action="{{ url_for('filament_save') }}"
+                            >
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+
+                                <input
+                                    type="hidden"
+                                    name="id"
+                                    value="{{ filament.id }}"
+                                >
+
+
+                                <label>
+                                    Nombre
+                                </label>
+
+                                <input
+                                    name="name"
+                                    value="{{ filament.name }}"
+                                    required
+                                >
+
+
+                                <label>
+                                    Material
+                                </label>
+
+                                <input
+                                    name="material"
+                                    value="{{ filament.material }}"
+                                    required
+                                >
+
+
+                                <label>
+                                    Color
+                                </label>
+
+                                <input
+                                    name="color"
+                                    value="{{ filament.color }}"
+                                    required
+                                >
+
+
+                                <label>
+                                    Precio del rollo
+                                </label>
+
+                                <input
+                                    name="spool_price"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value="{{ filament.spool_price }}"
+                                    required
+                                >
+
+
+                                <label>
+                                    Peso del rollo
+                                </label>
+
+                                <input
+                                    name="spool_weight_g"
+                                    type="number"
+                                    min="1"
+                                    step="0.01"
+                                    value="{{ filament.spool_weight_g }}"
+                                    required
+                                >
+
+
+                                <label>
+
+                                    <input
+                                        type="checkbox"
+                                        name="active"
+
+                                        {% if filament.active %}
+                                            checked
+                                        {% endif %}
+
+                                        style="width:auto;"
+                                    >
+
+                                    Activo
+
+                                </label>
+
+
+                                <br>
+
+
+                                <button class="primary">
+
+                                    Guardar cambios
+
+                                </button>
+
+                            </form>
+
+
+                            <hr
+                                style="
+                                    margin-top:20px;
+                                    margin-bottom:20px;
+                                "
+                            >
+
+
+                            <form
+                                method="post"
+
+                                action="{{ url_for(
+                                    'filament_delete',
+                                    filament_id=filament.id
+                                ) }}"
+
+                                onsubmit="
+                                    return confirm(
+                                        '¿Seguro que deseas eliminar este filamento?'
+                                    );
+                                "
+                            >
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+
+                                <button
+                                    class="danger"
+                                    type="submit"
+                                >
+
+                                    Eliminar filamento
+
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </details>
+
+                </td>
+
+                {% endif %}
+
+            </tr>
+
+        {% else %}
+
+            <tr>
+
+                <td
+                    colspan="7"
+                    class="muted"
+                >
+
+                    No hay filamentos registrados.
+
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

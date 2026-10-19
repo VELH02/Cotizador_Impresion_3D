@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<div class="page-head">
+
+    <div>
+
+        <h1>
+            Presets de precios
+        </h1>
+
+        <p class="muted">
+
+            Configura diferentes políticas de precios para
+            clientes regulares, estudiantes, mayoristas, etc.
+
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- CREAR PRESET -->
+<!-- ===================================================== -->
+
+{% if current_user.is_admin %}
+
+<div class="card">
+
+    <h2>
+        Crear nuevo preset
+    </h2>
+
+
+    <form
+        method="post"
+        action="{{ url_for('margin_save') }}"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}"
+        >
+
+
+        <label>
+            Nombre
+        </label>
+
+        <input
+            name="name"
+            placeholder="Ej. Cliente mayorista"
+            required
+        >
+
+
+        <label>
+            Margen sobre filamento %
+        </label>
+
+        <input
+            name="filament_markup_pct"
+            type="number"
+            min="0"
+            step="0.01"
+            value="30"
+            required
+        >
+
+
+        <label>
+            Precio por hora de impresión
+        </label>
+
+        <input
+            name="print_hour_rate"
+            type="number"
+            min="0"
+            step="0.01"
+            value="5"
+            required
+        >
+
+
+        <label>
+            Precio por hora de postprocesado
+        </label>
+
+        <input
+            name="postprocess_hour_rate"
+            type="number"
+            min="0"
+            step="0.01"
+            value="5"
+            required
+        >
+
+
+        <label>
+            Margen sobre extras %
+        </label>
+
+        <input
+            name="extra_markup_pct"
+            type="number"
+            min="0"
+            step="0.01"
+            value="0"
+            required
+        >
+
+
+        <label>
+
+            <input
+                name="active"
+                type="checkbox"
+                checked
+                style="width:auto;"
+            >
+
+            Activo
+
+        </label>
+
+
+        <br>
+
+
+        <button class="primary">
+
+            Guardar preset
+
+        </button>
+
+    </form>
+
+</div>
+
+{% endif %}
+
+
+<!-- ===================================================== -->
+<!-- PRESETS EXISTENTES -->
+<!-- ===================================================== -->
+
+<div class="card">
+
+    <h2>
+        Presets existentes
+    </h2>
+
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Nombre
+                </th>
+
+                <th>
+                    Filamento
+                </th>
+
+                <th>
+                    Impresión/h
+                </th>
+
+                <th>
+                    Post/h
+                </th>
+
+                <th>
+                    Extras
+                </th>
+
+                <th>
+                    Estado
+                </th>
+
+                {% if current_user.is_admin %}
+
+                    <th>
+                        Acción
+                    </th>
+
+                {% endif %}
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+        {% for preset in presets %}
+
+            <tr>
+
+                <td>
+
+                    <strong>
+                        {{ preset.name }}
+                    </strong>
+
+                </td>
+
+
+                <td>
+
+                    {{ preset.filament_markup_pct }}%
+
+                </td>
+
+
+                <td>
+
+                    {{ currency }}{{ preset.print_hour_rate|money }}
+
+                </td>
+
+
+                <td>
+
+                    {{ currency }}{{ preset.postprocess_hour_rate|money }}
+
+                </td>
+
+
+                <td>
+
+                    {{ preset.extra_markup_pct }}%
+
+                </td>
+
+
+                <td>
+
+                    {% if preset.active %}
+
+                        Activo
+
+                    {% else %}
+
+                        Inactivo
+
+                    {% endif %}
+
+                </td>
+
+
+                {% if current_user.is_admin %}
+
+                <td>
+
+                    <details>
+
+                        <summary
+                            style="cursor:pointer;"
+                        >
+                            Editar
+                        </summary>
+
+
+                        <div
+                            style="
+                                margin-top:15px;
+                                min-width:300px;
+                            "
+                        >
+
+                            <form
+                                method="post"
+                                action="{{ url_for('margin_save') }}"
+                            >
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+
+                                <input
+                                    type="hidden"
+                                    name="id"
+                                    value="{{ preset.id }}"
+                                >
+
+
+                                <label>
+                                    Nombre
+                                </label>
+
+                                <input
+                                    name="name"
+                                    value="{{ preset.name }}"
+                                    required
+                                >
+
+
+                                <label>
+                                    Margen filamento %
+                                </label>
+
+                                <input
+                                    name="filament_markup_pct"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value="{{ preset.filament_markup_pct }}"
+                                    required
+                                >
+
+
+                                <label>
+                                    Precio impresión / hora
+                                </label>
+
+                                <input
+                                    name="print_hour_rate"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value="{{ preset.print_hour_rate }}"
+                                    required
+                                >
+
+
+                                <label>
+                                    Precio postprocesado / hora
+                                </label>
+
+                                <input
+                                    name="postprocess_hour_rate"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value="{{ preset.postprocess_hour_rate }}"
+                                    required
+                                >
+
+
+                                <label>
+                                    Margen extras %
+                                </label>
+
+                                <input
+                                    name="extra_markup_pct"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value="{{ preset.extra_markup_pct }}"
+                                    required
+                                >
+
+
+                                <label>
+
+                                    <input
+                                        name="active"
+                                        type="checkbox"
+
+                                        {% if preset.active %}
+                                            checked
+                                        {% endif %}
+
+                                        style="width:auto;"
+                                    >
+
+                                    Activo
+
+                                </label>
+
+
+                                <br>
+
+
+                                <button class="primary">
+
+                                    Guardar cambios
+
+                                </button>
+
+                            </form>
+
+
+                            <hr
+                                style="
+                                    margin-top:20px;
+                                    margin-bottom:20px;
+                                "
+                            >
+
+
+                            <form
+                                method="post"
+
+                                action="{{ url_for(
+                                    'margin_delete',
+                                    preset_id=preset.id
+                                ) }}"
+
+                                onsubmit="
+                                    return confirm(
+                                        '¿Seguro que deseas eliminar este preset?'
+                                    );
+                                "
+                            >
+
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
+
+
+                                <button
+                                    type="submit"
+                                    class="danger"
+                                >
+
+                                    Eliminar preset
+
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </details>
+
+                </td>
+
+                {% endif %}
+
+            </tr>
+
+        {% else %}
+
+            <tr>
+
+                <td
+                    colspan="7"
+                    class="muted"
+                >
+
+                    No existen presets.
+
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

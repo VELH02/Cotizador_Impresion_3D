@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+
+{{ company_name }} — Iniciar sesión
+
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="login-card card">
+
+
+    <div class="login-logo-container">
+
+
+        <img
+            class="login-logo"
+            src="{{ url_for('static', filename='logo.png') }}"
+            alt="{{ company_name }}"
+            onerror="
+                this.style.display='none';
+                this.nextElementSibling.style.display='block';
+            "
+        >
+
+
+        <h1
+            style="display:none;"
+        >
+
+            {{ company_name }}
+
+        </h1>
+
+
+    </div>
+
+
+    <p class="muted login-subtitle">
+
+        Sistema de cotizaciones
+
+    </p>
+
+
+    <form method="post">
+
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}"
+        >
+
+
+        <label>
+            Usuario
+        </label>
+
+
+        <input
+            name="username"
+            autocomplete="username"
+            required
+            autofocus
+        >
+
+
+        <label>
+            Contraseña
+        </label>
+
+
+        <input
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+        >
+
+
+        <button class="primary login-button">
+            Entrar
+        </button>
+
+
+    </form>
+
+
+</div>
+
+
+{% endblock %}

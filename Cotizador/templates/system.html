@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Sistema
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="page-head">
+
+    <div>
+
+        <h1>
+            Sistema
+        </h1>
+
+        <p class="muted">
+            Configuración y mantenimiento de la aplicación.
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- FECHA Y HORA -->
+<!-- ===================================================== -->
+
+<div class="card">
+
+    <h2>
+        Fecha y hora
+    </h2>
+
+
+    <p>
+
+        <strong>
+            Hora actual de la aplicación:
+        </strong>
+
+        <br>
+
+        {{ current_time.strftime("%d/%m/%Y %H:%M:%S") }}
+
+    </p>
+
+
+    <p>
+
+        <strong>
+            Zona horaria actual:
+        </strong>
+
+        <br>
+
+        {{ timezone_name }}
+
+    </p>
+
+
+    <hr>
+
+
+    <form
+        method="post"
+        action="{{ url_for('system_timezone') }}"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}"
+        >
+
+
+        <label>
+            Zona horaria
+        </label>
+
+
+        <select name="timezone">
+
+            {% for label, value in timezone_options %}
+
+                <option
+
+                    value="{{ value }}"
+
+                    {% if timezone_name == value %}
+                        selected
+                    {% endif %}
+
+                >
+
+                    {{ label }}
+                    —
+                    {{ value }}
+
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <label>
+            Código IANA personalizado
+        </label>
+
+
+        <input
+
+            name="custom_timezone"
+
+            placeholder="Ej. Europe/Paris"
+
+        >
+
+
+        <p class="muted">
+
+            Si escribes un código personalizado,
+            tendrá prioridad sobre la selección anterior.
+
+        </p>
+
+
+        <button class="primary">
+
+            Guardar zona horaria
+
+        </button>
+
+    </form>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- BASE DE DATOS -->
+<!-- ===================================================== -->
+
+<div class="card">
+
+    <h2>
+        Base de datos
+    </h2>
+
+
+    <table>
+
+        <tbody>
+
+            <tr>
+
+                <th>
+                    Archivo
+                </th>
+
+                <td>
+                    quotes.db
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <th>
+                    Tamaño
+                </th>
+
+                <td>
+                    {{ database_size|filesize }}
+                </td>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+
+    <br>
+
+
+    <form
+        method="post"
+        action="{{ url_for('system_database_export') }}"
+    >
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token() }}"
+        >
+
+
+        <button class="primary">
+
+            Exportar copia de seguridad
+
+        </button>
+
+    </form>
+
+
+    <p class="muted">
+
+        La copia se genera usando el mecanismo de backup
+        de SQLite, por lo que no es necesario detener
+        la aplicación.
+
+    </p>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- INFORMACIÓN -->
+<!-- ===================================================== -->
+
+<div class="card">
+
+    <h2>
+        Información de la aplicación
+    </h2>
+
+
+    <table>
+
+        <tbody>
+
+
+            <tr>
+
+                <th>
+                    Python
+                </th>
+
+                <td>
+                    {{ python_version }}
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <th>
+                    Sistema
+                </th>
+
+                <td>
+                    {{ operating_system }}
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <th>
+                    Zona horaria
+                </th>
+
+                <td>
+                    {{ timezone_name }}
+                </td>
+
+            </tr>
+
+
+            <tr>
+
+                <th>
+                    Reinicio
+                </th>
+
+                <td>
+
+                    {% if restart_enabled %}
+
+                        Configurado
+
+                    {% else %}
+
+                        No configurado
+
+                    {% endif %}
+
+                </td>
+
+            </tr>
+
+
+        </tbody>
+
+    </table>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- REINICIO -->
+<!-- ===================================================== -->
+
+<div class="card">
+
+    <h2>
+        Servicio de la aplicación
+    </h2>
+
+
+    {% if restart_enabled %}
+
+
+        <p>
+
+            El administrador puede solicitar
+            el reinicio del servicio del Cotizador 3D.
+
+        </p>
+
+
+        <form
+
+            method="post"
+
+            action="{{ url_for('system_restart') }}"
+
+            onsubmit="
+                return confirm(
+                    '¿Seguro que deseas reiniciar el servicio de la aplicación?'
+                );
+            "
+
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+
+            <button class="danger">
+
+                Reiniciar Cotizador 3D
+
+            </button>
+
+        </form>
+
+
+    {% else %}
+
+
+        <p class="muted">
+
+            El reinicio está deshabilitado porque todavía
+            ejecutas la aplicación directamente o no se ha
+            configurado un servicio.
+
+        </p>
+
+
+        <button
+            disabled
+        >
+
+            Reiniciar Cotizador 3D
+
+        </button>
+
+
+    {% endif %}
+
+
+</div>
+
+
+{% endblock %}

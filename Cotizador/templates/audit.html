@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="page-head">
+
+    <div>
+
+        <h1>
+            Auditoría
+        </h1>
+
+        <p class="muted">
+            Últimos 500 eventos registrados
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="card">
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Fecha
+                    </th>
+
+                    <th>
+                        Usuario
+                    </th>
+
+                    <th>
+                        Acción
+                    </th>
+
+                    <th>
+                        Entidad
+                    </th>
+
+                    <th>
+                        Referencia
+                    </th>
+
+                    <th>
+                        Detalles
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+
+            {% for log in logs %}
+
+
+                <tr>
+
+                    <td>
+                        {{ log.created_at|localdatetime }}
+                    </td>
+
+                    <td>
+                        {{ log.username }}
+                    </td>
+
+                    <td>
+                        {{ log.action }}
+                    </td>
+
+                    <td>
+                        {{ log.entity }}
+                    </td>
+
+                    <td>
+                        {{ log.entity_ref or "—" }}
+                    </td>
+
+                    <td>
+                        {{ log.details or "—" }}
+                    </td>
+
+                </tr>
+
+
+            {% endfor %}
+
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

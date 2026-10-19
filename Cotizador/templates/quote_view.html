@@ -1,0 +1,475 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+<div class="page-head">
+
+
+    <div>
+
+        <h1>
+            {{ q.quote_number }}
+        </h1>
+
+        <p class="muted">
+
+            {{ q.customer_name or "Sin cliente" }}
+
+        </p>
+
+    </div>
+
+
+    <div class="actions">
+
+
+        <a
+            class="button"
+            href="{{ url_for(
+                'quote_pdf',
+                quote_id=q.id
+            ) }}"
+        >
+            Descargar PDF
+        </a>
+
+
+        <a
+            class="button"
+            href="{{ url_for(
+                'quote_edit',
+                quote_id=q.id
+            ) }}"
+        >
+            Editar
+        </a>
+
+
+        <form
+            method="post"
+            action="{{ url_for(
+                'quote_duplicate',
+                quote_id=q.id
+            ) }}"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+            <button>
+                Duplicar
+            </button>
+
+        </form>
+
+
+        <form
+
+            method="post"
+
+            action="{{ url_for(
+                'quote_delete',
+                quote_id=q.id
+            ) }}"
+
+            onsubmit="
+                return confirm(
+                    '¿Seguro que deseas eliminar esta cotización?'
+                );
+            "
+
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+            <button class="danger">
+                Eliminar
+            </button>
+
+        </form>
+
+
+    </div>
+
+</div>
+
+
+<div class="card quote-general-info">
+
+
+    <div>
+
+        <span class="info-label">
+            Fecha
+        </span>
+
+        <strong>
+            {{ q.created_at|localdate }}
+        </strong>
+
+    </div>
+
+
+    <div>
+
+        <span class="info-label">
+            Hora
+        </span>
+
+        <strong>
+            {{ q.created_at|localsimpletime }}
+        </strong>
+
+    </div>
+
+
+    <div>
+
+        <span class="info-label">
+            Vendedor
+        </span>
+
+        <strong>
+
+            {% if q.created_by %}
+
+                {{ q.created_by.username }}
+
+            {% else %}
+
+                —
+
+            {% endif %}
+
+        </strong>
+
+    </div>
+
+
+    <div>
+
+        <span class="info-label">
+            Cliente
+        </span>
+
+        <strong>
+            {{ q.customer_name or "—" }}
+        </strong>
+
+    </div>
+
+
+    <div>
+
+        <span class="info-label">
+            Preset utilizado
+        </span>
+
+        <strong>
+            {{ q.preset_name }}
+        </strong>
+
+    </div>
+
+
+</div>
+
+
+{% for line in q.lines %}
+
+
+<div class="card">
+
+
+    <div class="line-header">
+
+        <div>
+
+            <h2>
+                {{ line.article_name }}
+            </h2>
+
+            <span class="muted">
+
+                Cantidad:
+                {{ line.quantity }}
+
+            </span>
+
+        </div>
+
+
+        <strong class="line-total">
+
+            {{ currency }}{{ line.line_total|money }}
+
+        </strong>
+
+    </div>
+
+
+    <div class="cost-grid">
+
+
+        <div>
+
+            <span class="info-label">
+                Material
+            </span>
+
+            <strong>
+
+                {{ currency }}{{ line.line_material_cost|money }}
+
+            </strong>
+
+        </div>
+
+
+        <div>
+
+            <span class="info-label">
+                Impresión
+            </span>
+
+            <strong>
+
+                {{ currency }}{{ line.line_print_cost|money }}
+
+            </strong>
+
+            <small class="muted">
+
+                {{ line.print_hours_each }}
+                h por unidad
+
+            </small>
+
+        </div>
+
+
+        <div>
+
+            <span class="info-label">
+                Postprocesado
+            </span>
+
+            <strong>
+
+                {{ currency }}{{ line.line_post_cost|money }}
+
+            </strong>
+
+            <small class="muted">
+
+                {{ line.post_hours_each }}
+                h por unidad
+
+            </small>
+
+        </div>
+
+
+        <div>
+
+            <span class="info-label">
+                Precio unitario
+            </span>
+
+            <strong>
+
+                {{ currency }}{{
+                    (
+                        line.line_total
+                        /
+                        line.quantity
+                    )|money
+                }}
+
+            </strong>
+
+        </div>
+
+
+    </div>
+
+
+    {% if line.filaments %}
+
+        <h3>
+            Filamentos
+        </h3>
+
+
+        <div class="chips">
+
+        {% for filament in line.filaments %}
+
+            <span>
+
+                {{ filament.material }}
+
+                {{ filament.color }}
+
+                ·
+
+                {{ filament.grams_each }}
+                g por unidad
+
+            </span>
+
+        {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+
+</div>
+
+
+{% endfor %}
+
+
+{% if q.extras %}
+
+
+<div class="card">
+
+    <h2>
+        Extras
+    </h2>
+
+
+    {% for extra in q.extras %}
+
+
+        <div class="extra-display-row">
+
+            <span>
+
+                {{ extra.description }}
+
+                ×
+
+                {{ extra.quantity }}
+
+            </span>
+
+            <strong>
+
+                {{ currency }}{{ extra.line_total|money }}
+
+            </strong>
+
+        </div>
+
+
+    {% endfor %}
+
+</div>
+
+
+{% endif %}
+
+
+<div class="card total-card">
+
+
+    <div>
+
+        <span>
+            Material
+        </span>
+
+        <strong>
+            {{ currency }}{{ q.subtotal_material|money }}
+        </strong>
+
+    </div>
+
+
+    <div>
+
+        <span>
+            Impresión
+        </span>
+
+        <strong>
+            {{ currency }}{{ q.subtotal_print|money }}
+        </strong>
+
+    </div>
+
+
+    <div>
+
+        <span>
+            Postprocesado
+        </span>
+
+        <strong>
+            {{ currency }}{{ q.subtotal_post|money }}
+        </strong>
+
+    </div>
+
+
+    <div>
+
+        <span>
+            Extras
+        </span>
+
+        <strong>
+            {{ currency }}{{ q.subtotal_extras|money }}
+        </strong>
+
+    </div>
+
+
+    <div class="grand-total">
+
+        <span>
+            TOTAL
+        </span>
+
+        <strong>
+            {{ currency }}{{ q.total|money }}
+        </strong>
+
+    </div>
+
+
+</div>
+
+
+{% if q.notes %}
+
+
+<div class="card">
+
+    <h2>
+        Notas
+    </h2>
+
+    <p class="notes-text">
+        {{ q.notes }}
+    </p>
+
+</div>
+
+
+{% endif %}
+
+
+{% endblock %}
